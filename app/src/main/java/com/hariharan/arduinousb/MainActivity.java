@@ -16,6 +16,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import androidx.core.content.ContextCompat;
+
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 
@@ -24,14 +26,39 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MainActivity extends Activity {
+    private int REQUEST_CODE_PERMISSIONS = 1001;
+    private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA", "android.permission.WRITE_EXTERNAL_STORAGE"};
     public final String ACTION_USB_PERMISSION = "com.hariharan.arduinousb.USB_PERMISSION";
-    Button startButton, sendButton, clearButton, stopButton;
-    TextView textView;
-    EditText editText;
+    Button startButton, stopButton; //sendButton, clearButton,
+//    TextView textView;
+//    EditText editText;
     UsbManager usbManager;
     UsbDevice device;
     UsbSerialDevice serialPort;
     UsbDeviceConnection connection;
+
+//    private boolean allPermissionsGranted(){
+//
+//        for(String permission : REQUIRED_PERMISSIONS){
+//            if(ContextCompat.checkSelfPermission(getActivity(), permission) != PackageManager.PERMISSION_GRANTED){
+//                return false;
+//            }
+//        }
+//        return true;
+//    }
+//    @Override
+//    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+//
+//        if(requestCode == REQUEST_CODE_PERMISSIONS){
+//            if(allPermissionsGranted()){
+//                startCamera();
+//            } else{
+//                Toast.makeText(this, "Permissions not granted by the user.", Toast.LENGTH_SHORT).show();
+//                this.finish();
+//            }
+//        }
+//    }
+
 
     UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() { //Defining a Callback which triggers whenever data is read.
         @Override
@@ -40,14 +67,13 @@ public class MainActivity extends Activity {
             try {
                 data = new String(arg0, "UTF-8");
                 data.concat("/n");
-                tvAppend(textView, data);
+                //tvAppend(textView, data);
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
-
-
         }
     };
+
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() { //Broadcast Receiver to automatically start and stop the Serial connection.
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -65,7 +91,7 @@ public class MainActivity extends Activity {
                             serialPort.setParity(UsbSerialInterface.PARITY_NONE);
                             serialPort.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF);
                             serialPort.read(mCallback);
-                            tvAppend(textView,"Serial Connection Opened!\n");
+                            //tvAppend(textView,"Serial Connection Opened!\n");
 
                         } else {
                             Log.d("SERIAL", "PORT NOT OPEN");
@@ -80,7 +106,6 @@ public class MainActivity extends Activity {
                 onClickStart(startButton);
             } else if (intent.getAction().equals(UsbManager.ACTION_USB_DEVICE_DETACHED)) {
                 onClickStop(stopButton);
-
             }
         }
 
@@ -91,34 +116,31 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         usbManager = (UsbManager) getSystemService(this.USB_SERVICE);
         Log.d("USBMANAGER", "onCreate: " + usbManager.toString());
         startButton = (Button) findViewById(R.id.buttonStart);
-        sendButton = (Button) findViewById(R.id.buttonSend);
-        clearButton = (Button) findViewById(R.id.buttonClear);
+//        sendButton = (Button) findViewById(R.id.buttonSend);
+//        clearButton = (Button) findViewById(R.id.buttonClear);
         stopButton = (Button) findViewById(R.id.buttonStop);
-        editText = (EditText) findViewById(R.id.editText);
-        textView = (TextView) findViewById(R.id.textView);
+//        editText = (EditText) findViewById(R.id.editText);
+//        textView = (TextView) findViewById(R.id.textView);
         setUiEnabled(false);
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_USB_PERMISSION);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
         filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
         registerReceiver(broadcastReceiver, filter);
-
-
     }
 
     public void setUiEnabled(boolean bool) {
         startButton.setEnabled(!bool);
-        sendButton.setEnabled(bool);
+        //sendButton.setEnabled(bool);
         stopButton.setEnabled(bool);
-        textView.setEnabled(bool);
-
+        //textView.setEnabled(bool);
     }
 
     public void onClickStart(View view) {
-
         HashMap<String, UsbDevice> usbDevices = usbManager.getDeviceList();
         Log.d("onclick", "Button Pressed!");
         if (!usbDevices.isEmpty()) {
@@ -127,8 +149,7 @@ public class MainActivity extends Activity {
                 device = entry.getValue();
                 int deviceVID = device.getVendorId();
                 Log.d("MYINT", "value: " + deviceVID);
-                if (deviceVID == 0x2341 || deviceVID == 0x0403)//Arduino Vendor ID
-                {
+                if (deviceVID == 0x2341 || deviceVID == 0x0403) { //Arduino Vendor ID
                     PendingIntent pi = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
                     usbManager.requestPermission(device, pi);
                     keep = false;
@@ -141,26 +162,22 @@ public class MainActivity extends Activity {
                     break;
             }
         }
-
-
     }
 
     public void onClickSend(View view) {
-        String string = editText.getText().toString();
-        serialPort.write(string.getBytes());
-        tvAppend(textView, "\nData Sent : " + string + "\n");
-
+        //String string = editText.getText().toString();
+        serialPort.write("hello".getBytes());
+        //tvAppend(textView, "\nData Sent : " + string + "\n");
     }
 
     public void onClickStop(View view) {
         setUiEnabled(false);
         serialPort.close();
-        tvAppend(textView,"\nSerial Connection Closed! \n");
-
+        //tvAppend(textView,"\nSerial Connection Closed! \n");
     }
 
     public void onClickClear(View view) {
-        textView.setText(" ");
+        //textView.setText(" ");
     }
 
     private void tvAppend(TextView tv, CharSequence text) {
@@ -174,5 +191,4 @@ public class MainActivity extends Activity {
             }
         });
     }
-
 }

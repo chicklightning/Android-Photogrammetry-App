@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.hariharan.arduinousb" >
     <uses-feature android:name="android.hardware.usb.host" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-sdk android:minSdkVersion="21"/>
 
     <application
         android:allowBackup="true"
