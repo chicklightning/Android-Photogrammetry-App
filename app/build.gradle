@@ -20,7 +20,7 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:appcompat-v7:23.0.1'
-    compile files('libs/usbserial.jar')
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support:appcompat-v7:23.0.1'
+    implementation files('libs/usbserial.jar')
 }

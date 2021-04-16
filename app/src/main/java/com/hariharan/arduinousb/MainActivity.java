@@ -92,6 +92,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         usbManager = (UsbManager) getSystemService(this.USB_SERVICE);
+        Log.d("USBMANAGER", "onCreate: " + usbManager.toString());
         startButton = (Button) findViewById(R.id.buttonStart);
         sendButton = (Button) findViewById(R.id.buttonSend);
         clearButton = (Button) findViewById(R.id.buttonClear);
@@ -119,12 +120,14 @@ public class MainActivity extends Activity {
     public void onClickStart(View view) {
 
         HashMap<String, UsbDevice> usbDevices = usbManager.getDeviceList();
+        Log.d("onclick", "Button Pressed!");
         if (!usbDevices.isEmpty()) {
             boolean keep = true;
             for (Map.Entry<String, UsbDevice> entry : usbDevices.entrySet()) {
                 device = entry.getValue();
                 int deviceVID = device.getVendorId();
-                if (deviceVID == 0x2341)//Arduino Vendor ID
+                Log.d("MYINT", "value: " + deviceVID);
+                if (deviceVID == 0x2341 || deviceVID == 0x0403)//Arduino Vendor ID
                 {
                     PendingIntent pi = PendingIntent.getBroadcast(this, 0, new Intent(ACTION_USB_PERMISSION), 0);
                     usbManager.requestPermission(device, pi);
