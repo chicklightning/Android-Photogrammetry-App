@@ -52,6 +52,7 @@ import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
     private int REQUEST_CODE_PERMISSIONS = 1001;
@@ -67,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
     UsbDevice device;
     UsbSerialDevice serialPort;
     UsbDeviceConnection connection;
+    ImageCapture imageCapture;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -82,16 +84,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     UsbSerialInterface.UsbReadCallback mCallback = new UsbSerialInterface.UsbReadCallback() { //Defining a Callback which triggers whenever data is read.
+
         @Override
         public void onReceivedData(byte[] arg0) {
             String data = null;
             try {
                 data = new String(arg0, "UTF-8");
-                data.concat("/n");
+                if (data.equals("increase")) {
+                    // Wait for 1 second, then take another picture:
+                    Handler h = new Handler(Looper.getMainLooper());
+                    h.postDelayed(() -> {
+                        // Actions to do after 10 seconds
+                    }, 1000);
+                    captureImage();
+                }
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
         }
+
     };
 
     @Override
@@ -113,11 +124,45 @@ public class MainActivity extends AppCompatActivity {
         mPreviewView = findViewById(R.id.previewView);
         captureImage = findViewById(R.id.captureImg);
 
-        if(allPermissionsGranted()){
+        if(allPermissionsGranted()) {
             startCamera(); //start camera if permission has been granted by user
         } else {
             ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
         }
+    }
+
+    public void bindPreview(@NonNull ProcessCameraProvider cameraProvider) {
+
+        Preview preview = new Preview.Builder()
+                .build();
+
+        CameraSelector cameraSelector = new CameraSelector.Builder()
+                .requireLensFacing(CameraSelector.LENS_FACING_BACK)
+                .build();
+
+        ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
+                .build();
+
+        ImageCapture.Builder builder = new ImageCapture.Builder();
+
+        //Vendor-Extensions (The CameraX extensions dependency in build.gradle)
+        HdrImageCaptureExtender hdrImageCaptureExtender = HdrImageCaptureExtender.create(builder);
+
+        // Query if extension is available (optional).
+        if (hdrImageCaptureExtender.isExtensionAvailable(cameraSelector)) {
+            // Enable the extension if available.
+            hdrImageCaptureExtender.enableExtension(cameraSelector);
+        }
+
+        imageCapture = builder
+                .setTargetRotation(this.getWindowManager().getDefaultDisplay().getRotation())
+                .build();
+        preview.setSurfaceProvider(mPreviewView.createSurfaceProvider());
+        Camera camera = cameraProvider.bindToLifecycle((LifecycleOwner) this, cameraSelector, preview, imageAnalysis, imageCapture);
+
+        captureImage.setOnClickListener(v -> {
+            captureImage();
+        });
     }
 
     public void onClickStart(View view) {
@@ -144,11 +189,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-//    public void onClickSend(View view) {
-//        //String string = editText.getText().toString();
-//        serialPort.write("hello".getBytes());
-//    }
-
     public void setUiEnabled(boolean bool) {
         startButton.setEnabled(!bool);
         stopButton.setEnabled(bool);
@@ -157,6 +197,30 @@ public class MainActivity extends AppCompatActivity {
     public void onClickStop(View view) {
         setUiEnabled(false);
         serialPort.close();
+    }
+
+    public void captureImage() {
+        SimpleDateFormat mDateFormat = new SimpleDateFormat("yyyyMMddHHmmss", Locale.US);
+        File file = new File(getBatchDirectoryName(), mDateFormat.format(new Date())+ ".jpg");
+
+        ImageCapture.OutputFileOptions outputFileOptions = new ImageCapture.OutputFileOptions.Builder(file).build();
+        imageCapture.takePicture(outputFileOptions, executor, new ImageCapture.OnImageSavedCallback () {
+
+            @Override
+            public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
+                Handler h = new Handler(Looper.getMainLooper());
+                h.post(() -> Toast.makeText(MainActivity.this, "Image saved successfully", Toast.LENGTH_SHORT).show());
+                String string = "increase";
+                if (serialPort != null) {
+                    serialPort.write(string.getBytes());
+                }
+            }
+
+            @Override
+            public void onError(@NonNull ImageCaptureException error) {
+                error.printStackTrace();
+            }
+        });
     }
 
     public String getBatchDirectoryName() {
@@ -207,82 +271,21 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    void bindPreview(@NonNull ProcessCameraProvider cameraProvider) {
 
-        Preview preview = new Preview.Builder()
-                .build();
-
-        CameraSelector cameraSelector = new CameraSelector.Builder()
-                .requireLensFacing(CameraSelector.LENS_FACING_BACK)
-                .build();
-
-        ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
-                .build();
-
-        ImageCapture.Builder builder = new ImageCapture.Builder();
-
-        //Vendor-Extensions (The CameraX extensions dependency in build.gradle)
-        HdrImageCaptureExtender hdrImageCaptureExtender = HdrImageCaptureExtender.create(builder);
-
-        // Query if extension is available (optional).
-        if (hdrImageCaptureExtender.isExtensionAvailable(cameraSelector)) {
-            // Enable the extension if available.
-            hdrImageCaptureExtender.enableExtension(cameraSelector);
-        }
-
-        final ImageCapture imageCapture = builder
-                .setTargetRotation(this.getWindowManager().getDefaultDisplay().getRotation())
-                .build();
-        preview.setSurfaceProvider(mPreviewView.createSurfaceProvider());
-        Camera camera = cameraProvider.bindToLifecycle((LifecycleOwner)this, cameraSelector, preview, imageAnalysis, imageCapture);
-
-        captureImage.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-
-                SimpleDateFormat mDateFormat = new SimpleDateFormat("yyyyMMddHHmmss", Locale.US);
-                File file = new File(getBatchDirectoryName(), mDateFormat.format(new Date())+ ".jpg");
-
-                ImageCapture.OutputFileOptions outputFileOptions = new ImageCapture.OutputFileOptions.Builder(file).build();
-                imageCapture.takePicture(outputFileOptions, executor, new ImageCapture.OnImageSavedCallback () {
-
-                    @Override
-                    public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
-                        Handler h = new Handler(Looper.getMainLooper());
-                        h.post(new Runnable() {
-                            public void run() {
-                                Toast.makeText(MainActivity.this, "Image Saved successfully", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-//                        new Handler().post(() -> Toast.makeText(MainActivity.this, "Image Saved successfully", Toast.LENGTH_SHORT).show());
-                    }
-
-                    @Override
-                    public void onError(@NonNull ImageCaptureException error) {
-                        error.printStackTrace();
-                    }
-                });
-            }
-        });
-    }
 
     private void startCamera() {
 
         final ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
 
-        cameraProviderFuture.addListener(new Runnable() {
-            @Override
-            public void run() {
-                try {
+        cameraProviderFuture.addListener(() -> {
+            try {
 
-                    ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
-                    bindPreview(cameraProvider);
+                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+                bindPreview(cameraProvider);
 
-                } catch (ExecutionException | InterruptedException e) {
-                    // No errors need to be handled for this Future.
-                    // This should never be reached.
-                }
+            } catch (ExecutionException | InterruptedException e) {
+                // No errors need to be handled for this Future.
+                // This should never be reached.
             }
         }, ContextCompat.getMainExecutor(this));
     }
