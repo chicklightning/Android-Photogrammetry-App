@@ -1,8 +1,10 @@
 <resources>
-    <string name="app_name">Arduino USB</string>
+    <string name="app_name">Photogrammetry | Creative Engineering</string>
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="preview_area">Preview Area</string>
     <string name="capture">Capture</string>
+    <string name="stop">Disconnect</string>
+    <string name="connect">Connect</string>
 </resources>
