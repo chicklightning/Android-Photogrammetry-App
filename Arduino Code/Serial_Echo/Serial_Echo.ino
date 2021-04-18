@@ -39,7 +39,7 @@ void loop() {
     delay(100);
     Parallax.write(90);
     delay(500);
-    Serial.println(angle);
+    Serial.println("increase");
   //}
   
 }
