@@ -344,6 +344,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         @Override
         public boolean onScale(ScaleGestureDetector scaleGestureDetector){
             scaleFactor *= scaleGestureDetector.getScaleFactor();
+            scaleFactor = Math.max(1f, Math.min(scaleFactor, 5.0f));
             mPreviewView.setScaleX(scaleFactor);
             mPreviewView.setScaleY(scaleFactor);
             return true;
