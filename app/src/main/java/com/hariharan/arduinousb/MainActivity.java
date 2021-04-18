@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
             String data = null;
             try {
                 data = new String(arg0, "UTF-8");
-                if (data.equals("increase")) {
+                if (data.equals("i")) {
                     // Wait for 1 second, then take another picture:
                     Handler h = new Handler(Looper.getMainLooper());
                     h.postDelayed(() -> {
@@ -231,9 +231,9 @@ public class MainActivity extends AppCompatActivity {
             public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
                 Handler h = new Handler(Looper.getMainLooper());
                 h.post(() -> Toast.makeText(MainActivity.this, "Image saved successfully", Toast.LENGTH_SHORT).show());
-                String string = "increase";
+                byte[] messageToArduino = new byte[] { 1 };
                 if (serialPort != null) {
-                    serialPort.write(string.getBytes());
+                    serialPort.write(messageToArduino);
                 }
             }
 
