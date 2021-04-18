@@ -13,24 +13,20 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
 
 import androidx.camera.core.CameraControl;
-import androidx.camera.core.DisplayOrientedMeteringPointFactory;
 import androidx.camera.core.FocusMeteringAction;
-import androidx.camera.core.FocusMeteringResult;
 import androidx.camera.core.MeteringPoint;
-import androidx.camera.core.MeteringPointFactory;
-import androidx.camera.core.SurfaceOrientedMeteringPointFactory;
 import androidx.camera.view.TextureViewMeteringPointFactory;
 import androidx.core.content.ContextCompat;
 
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 
-import java.io.Console;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
@@ -53,7 +49,6 @@ import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.os.Handler;
 import android.widget.ImageView;
-import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -65,7 +60,6 @@ import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity implements TextureView.SurfaceTextureListener {
     private int REQUEST_CODE_PERMISSIONS = 1001;
@@ -75,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     private Executor executor = Executors.newSingleThreadExecutor();
 
     PreviewView mPreviewView;
-    ImageView captureImage;
+    ImageView imageView;
     TextureView textureView;
     Button startButton, stopButton;
     UsbManager usbManager;
@@ -83,6 +77,9 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
     UsbSerialDevice serialPort;
     UsbDeviceConnection connection;
     ImageCapture imageCapture;
+
+    private ScaleGestureDetector scaleGestureDetector;
+    private float scaleFactor = 1.0f;
 
     private boolean isCapturing = false;
 
@@ -140,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
         registerReceiver(broadcastReceiver, filter);
 
         mPreviewView = findViewById(R.id.previewView);
-        captureImage = findViewById(R.id.captureImg);
+        imageView = findViewById(R.id.captureImg);
 
         if(allPermissionsGranted()) {
             startCamera(); //start camera if permission has been granted by user
@@ -150,6 +147,8 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
 
         textureView = (TextureView)findViewById(R.id.textureView);
         textureView.setSurfaceTextureListener(this);
+
+        scaleGestureDetector = new ScaleGestureDetector(this, new ScaleListener());
     }
 
     public void bindPreview(@NonNull ProcessCameraProvider cameraProvider) {
@@ -188,8 +187,9 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
                 if (event.getAction() != MotionEvent.ACTION_UP) {
                 /* Original post returns false here, but in my experience this makes
                 onTouch not being triggered for ACTION_UP event */
-                    return true;
+                    return scaleGestureDetector.onTouchEvent(event);
                 }
+
                 TextureViewMeteringPointFactory factory = new TextureViewMeteringPointFactory(textureView);
                 MeteringPoint point = factory.createPoint(event.getX(), event.getY());
                 FocusMeteringAction action = new FocusMeteringAction.Builder(point).build();
@@ -198,7 +198,7 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
             }
         });
 
-        captureImage.setOnClickListener(v -> {
+        imageView.setOnClickListener(v -> {
             isCapturing = true;
             captureImage();
         });
@@ -336,6 +336,18 @@ public class MainActivity extends AppCompatActivity implements TextureView.Surfa
             }
         }
         return true;
+    }
+
+    private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+
+        // when a scale gesture is detected, use it to resize the image
+        @Override
+        public boolean onScale(ScaleGestureDetector scaleGestureDetector){
+            scaleFactor *= scaleGestureDetector.getScaleFactor();
+            mPreviewView.setScaleX(scaleFactor);
+            mPreviewView.setScaleY(scaleFactor);
+            return true;
+        }
     }
 
     @Override
