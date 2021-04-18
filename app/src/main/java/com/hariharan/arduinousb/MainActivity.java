@@ -96,8 +96,8 @@ public class MainActivity extends AppCompatActivity {
                     // Wait for 1 second, then take another picture:
                     Handler h = new Handler(Looper.getMainLooper());
                     h.postDelayed(() -> {
-                        captureImage();
                     }, 1000);
+                    captureImage();
                 }
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
