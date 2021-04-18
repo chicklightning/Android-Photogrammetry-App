@@ -41,6 +41,7 @@ import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.os.Handler;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -69,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
     UsbSerialDevice serialPort;
     UsbDeviceConnection connection;
     ImageCapture imageCapture;
+//    VerticalSeekBar seekBar;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -94,9 +96,8 @@ public class MainActivity extends AppCompatActivity {
                     // Wait for 1 second, then take another picture:
                     Handler h = new Handler(Looper.getMainLooper());
                     h.postDelayed(() -> {
-                        // Actions to do after 10 seconds
+                        captureImage();
                     }, 1000);
-                    captureImage();
                 }
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
@@ -114,6 +115,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d("USBMANAGER", "onCreate: " + usbManager.toString());
         startButton = findViewById(R.id.buttonStart);
         stopButton = findViewById(R.id.buttonStop);
+
         setUiEnabled(false);
         IntentFilter filter = new IntentFilter();
         filter.addAction(ACTION_USB_PERMISSION);
@@ -123,6 +125,24 @@ public class MainActivity extends AppCompatActivity {
 
         mPreviewView = findViewById(R.id.previewView);
         captureImage = findViewById(R.id.captureImg);
+//        seekBar = findViewById(R.id.seekBar);
+//
+//        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+//            @Override
+//            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+//                camera.getCameraControl().setLinearZoom((float) (progress/100));
+//            }
+//
+//            @Override
+//            public void onStartTrackingTouch(SeekBar seekBar) {
+//
+//            }
+//
+//            @Override
+//            public void onStopTrackingTouch(SeekBar seekBar) {
+//
+//            }
+//        });
 
         if(allPermissionsGranted()) {
             startCamera(); //start camera if permission has been granted by user
@@ -159,6 +179,7 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         preview.setSurfaceProvider(mPreviewView.createSurfaceProvider());
         Camera camera = cameraProvider.bindToLifecycle((LifecycleOwner) this, cameraSelector, preview, imageAnalysis, imageCapture);
+        camera.getCameraControl().setZoomRatio(0.1f);
 
         captureImage.setOnClickListener(v -> {
             captureImage();
