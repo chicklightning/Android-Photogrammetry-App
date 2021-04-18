@@ -71,6 +71,8 @@ public class MainActivity extends AppCompatActivity {
     UsbSerialDevice serialPort;
     UsbDeviceConnection connection;
     ImageCapture imageCapture;
+
+    private boolean isCapturing = false;
 //    VerticalSeekBar seekBar;
 
     @Override
@@ -95,11 +97,10 @@ public class MainActivity extends AppCompatActivity {
             try {
                 data = new String(arg0, "UTF-8");
 
-                if (data != null && !data.trim().isEmpty()) {
+                if (!isCapturing && data != null && !data.trim().isEmpty()) {
+                    isCapturing = true;
                     // Wait for 1 second, then take another picture:
-                    h.postDelayed(() -> {
-                        captureImage();
-                    }, 1000);
+                    h.postDelayed(() -> captureImage(), 1000);
                 }
             } catch (UnsupportedEncodingException e) {
                 h.post(() -> Toast.makeText(MainActivity.this, getString(R.string.error_display), Toast.LENGTH_SHORT).show());
@@ -185,6 +186,7 @@ public class MainActivity extends AppCompatActivity {
         camera.getCameraControl().setZoomRatio(0.1f);
 
         captureImage.setOnClickListener(v -> {
+            isCapturing = true;
             captureImage();
         });
     }
@@ -238,6 +240,7 @@ public class MainActivity extends AppCompatActivity {
                 if (serialPort != null) {
                     serialPort.write(messageToArduino);
                 }
+                isCapturing = false;
             }
 
             @Override
