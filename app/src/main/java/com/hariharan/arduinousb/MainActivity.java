@@ -19,6 +19,7 @@ import androidx.core.content.ContextCompat;
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
 
+import java.io.Console;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
@@ -90,15 +91,18 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceivedData(byte[] arg0) {
             String data = null;
+            Handler h = new Handler(Looper.getMainLooper());
             try {
                 data = new String(arg0, "UTF-8");
-                if (data.equals("increase")) {
+                String finalData = data;
+                h.post(() -> Toast.makeText(MainActivity.this, finalData, Toast.LENGTH_SHORT).show());
+                if (data.equals("increase") || data.equals("increase\n")) {
                     // Wait for 1 second, then take another picture:
-                    Handler h = new Handler(Looper.getMainLooper());
                     h.postDelayed(() -> {}, 1000);
                     captureImage();
                 }
             } catch (UnsupportedEncodingException e) {
+                h.post(() -> Toast.makeText(MainActivity.this, "Unsupported data received", Toast.LENGTH_SHORT).show());
                 e.printStackTrace();
             }
         }
