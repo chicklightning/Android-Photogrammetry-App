@@ -22,16 +22,24 @@
         android:text="@string/stop"
         android:layout_alignParentRight="true"/>
 
+    <LinearLayout
+        android:id="@+id/rootView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimaryDark"
+        android:orientation="vertical">
+
+        <TextureView
+            android:id="@+id/textureView"
+            android:layout_width="match_parent"
+            android:layout_height="697dp"
+            android:layout_below="@+id/textView" />
+    </LinearLayout>
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#FF000000">
-
-<!--        <SeekBar-->
-<!--            android:id="@+id/seekBar1"-->
-<!--            android:layout_width="match_parent"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:rotation="270"/>-->
 
         <androidx.camera.view.PreviewView
             android:id="@+id/previewView"

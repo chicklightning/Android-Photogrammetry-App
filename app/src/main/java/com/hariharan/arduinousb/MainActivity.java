@@ -5,15 +5,26 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.SurfaceTexture;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.os.Looper;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
 
+import androidx.camera.core.CameraControl;
+import androidx.camera.core.DisplayOrientedMeteringPointFactory;
+import androidx.camera.core.FocusMeteringAction;
+import androidx.camera.core.FocusMeteringResult;
+import androidx.camera.core.MeteringPoint;
+import androidx.camera.core.MeteringPointFactory;
+import androidx.camera.core.SurfaceOrientedMeteringPointFactory;
+import androidx.camera.view.TextureViewMeteringPointFactory;
 import androidx.core.content.ContextCompat;
 
 import com.felhr.usbserial.UsbSerialDevice;
@@ -56,7 +67,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements TextureView.SurfaceTextureListener {
     private int REQUEST_CODE_PERMISSIONS = 1001;
     private final String[] REQUIRED_PERMISSIONS = new String[]{"android.permission.CAMERA", "android.permission.WRITE_EXTERNAL_STORAGE"};
     public final String ACTION_USB_PERMISSION = "com.hariharan.arduinousb.USB_PERMISSION";
@@ -65,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
 
     PreviewView mPreviewView;
     ImageView captureImage;
+    TextureView textureView;
     Button startButton, stopButton;
     UsbManager usbManager;
     UsbDevice device;
@@ -73,7 +85,6 @@ public class MainActivity extends AppCompatActivity {
     ImageCapture imageCapture;
 
     private boolean isCapturing = false;
-//    VerticalSeekBar seekBar;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -113,6 +124,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
 
         usbManager = (UsbManager) getSystemService(this.USB_SERVICE);
@@ -129,30 +141,15 @@ public class MainActivity extends AppCompatActivity {
 
         mPreviewView = findViewById(R.id.previewView);
         captureImage = findViewById(R.id.captureImg);
-//        seekBar = findViewById(R.id.seekBar);
-//
-//        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-//            @Override
-//            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-//                camera.getCameraControl().setLinearZoom((float) (progress/100));
-//            }
-//
-//            @Override
-//            public void onStartTrackingTouch(SeekBar seekBar) {
-//
-//            }
-//
-//            @Override
-//            public void onStopTrackingTouch(SeekBar seekBar) {
-//
-//            }
-//        });
 
         if(allPermissionsGranted()) {
             startCamera(); //start camera if permission has been granted by user
         } else {
             ActivityCompat.requestPermissions(this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS);
         }
+
+        textureView = (TextureView)findViewById(R.id.textureView);
+        textureView.setSurfaceTextureListener(this);
     }
 
     public void bindPreview(@NonNull ProcessCameraProvider cameraProvider) {
@@ -183,7 +180,23 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         preview.setSurfaceProvider(mPreviewView.createSurfaceProvider());
         Camera camera = cameraProvider.bindToLifecycle((LifecycleOwner) this, cameraSelector, preview, imageAnalysis, imageCapture);
-        camera.getCameraControl().setZoomRatio(0.1f);
+        CameraControl cameraControl = camera.getCameraControl();
+
+        textureView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() != MotionEvent.ACTION_UP) {
+                /* Original post returns false here, but in my experience this makes
+                onTouch not being triggered for ACTION_UP event */
+                    return true;
+                }
+                TextureViewMeteringPointFactory factory = new TextureViewMeteringPointFactory(textureView);
+                MeteringPoint point = factory.createPoint(event.getX(), event.getY());
+                FocusMeteringAction action = new FocusMeteringAction.Builder(point).build();
+                cameraControl.startFocusAndMetering(action);
+                return true;
+            }
+        });
 
         captureImage.setOnClickListener(v -> {
             isCapturing = true;
@@ -298,8 +311,6 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-
-
     private void startCamera() {
 
         final ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
@@ -325,5 +336,25 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return true;
+    }
+
+    @Override
+    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+
+    }
+
+    @Override
+    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+
+    }
+
+    @Override
+    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        return false;
+    }
+
+    @Override
+    public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+
     }
 }
