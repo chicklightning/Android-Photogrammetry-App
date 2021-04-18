@@ -92,11 +92,10 @@ public class MainActivity extends AppCompatActivity {
             String data = null;
             try {
                 data = new String(arg0, "UTF-8");
-                if (data.equals("i")) {
+                if (data.equals("increase")) {
                     // Wait for 1 second, then take another picture:
                     Handler h = new Handler(Looper.getMainLooper());
-                    h.postDelayed(() -> {
-                    }, 1000);
+                    h.postDelayed(() -> {}, 1000);
                     captureImage();
                 }
             } catch (UnsupportedEncodingException e) {
