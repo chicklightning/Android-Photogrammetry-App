@@ -32,17 +32,16 @@ void loop() {
   {
     c = Serial.read();
   }
-  //int i;
-  //int n=35;
-  //for (i=0; i<n ;i++){
+  
+  
     Parallax.write(100);
     delay(100);
     Parallax.write(90);
-    delay(500);
-    Serial.println("increase");
-  //}
-  
+    delay(2000);
+    Serial.print("i");
 }
+  
+
 
 void feedback360() {
   if(digitalRead(2)) {
