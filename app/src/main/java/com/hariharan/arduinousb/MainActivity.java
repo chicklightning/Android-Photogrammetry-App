@@ -79,8 +79,8 @@ public class MainActivity extends AppCompatActivity {
         if(requestCode == REQUEST_CODE_PERMISSIONS){
             if(allPermissionsGranted()){
                 startCamera();
-            } else{
-                Toast.makeText(this, "Permissions not granted by the user.", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, getString(R.string.permissions_not_granted), Toast.LENGTH_SHORT).show();
                 this.finish();
             }
         }
@@ -94,15 +94,15 @@ public class MainActivity extends AppCompatActivity {
             Handler h = new Handler(Looper.getMainLooper());
             try {
                 data = new String(arg0, "UTF-8");
-                String finalData = data;
-                h.post(() -> Toast.makeText(MainActivity.this, finalData, Toast.LENGTH_SHORT).show());
-                if (data.equals("increase") || data.equals("increase\n")) {
+
+                if (data != null && !data.trim().isEmpty()) {
                     // Wait for 1 second, then take another picture:
-                    h.postDelayed(() -> {}, 1000);
-                    captureImage();
+                    h.postDelayed(() -> {
+                        captureImage();
+                    }, 1000);
                 }
             } catch (UnsupportedEncodingException e) {
-                h.post(() -> Toast.makeText(MainActivity.this, "Unsupported data received", Toast.LENGTH_SHORT).show());
+                h.post(() -> Toast.makeText(MainActivity.this, getString(R.string.error_display), Toast.LENGTH_SHORT).show());
                 e.printStackTrace();
             }
         }
@@ -233,7 +233,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onImageSaved(@NonNull ImageCapture.OutputFileResults outputFileResults) {
                 Handler h = new Handler(Looper.getMainLooper());
-                h.post(() -> Toast.makeText(MainActivity.this, "Image saved successfully", Toast.LENGTH_SHORT).show());
+                h.post(() -> Toast.makeText(MainActivity.this, getString(R.string.image_saved), Toast.LENGTH_SHORT).show());
                 byte[] messageToArduino = new byte[] { 1 };
                 if (serialPort != null) {
                     serialPort.write(messageToArduino);

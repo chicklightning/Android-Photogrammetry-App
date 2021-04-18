@@ -7,4 +7,7 @@
     <string name="capture">Capture</string>
     <string name="stop">Disconnect</string>
     <string name="connect">Connect</string>
+    <string name="error_display">Something went wrong!</string>
+    <string name="permissions_not_granted">Permissions not granted by the user.</string>
+    <string name="image_saved">Image saved successfully.</string>
 </resources>
