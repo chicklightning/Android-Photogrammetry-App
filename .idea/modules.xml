@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ArduinoUSB.iml" filepath="$PROJECT_DIR$/.idea/modules/ArduinoUSB.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/ArduinoUSB.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/ArduinoUSB.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Android-Photogrammetry-App.iml" filepath="$PROJECT_DIR$/.idea/modules/Android-Photogrammetry-App.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/Android-Photogrammetry-App.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/Android-Photogrammetry-App.app.iml" />
     </modules>
   </component>
 </project>
